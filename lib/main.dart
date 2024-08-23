@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
@@ -21,6 +23,8 @@ class CameraApp extends StatefulWidget {
 
 class _CameraAppState extends State<CameraApp> {
   late CameraController controller;
+  bool _showCameraPreview = false;
+  XFile? _picture;
 
   @override
   void initState() {
@@ -57,12 +61,49 @@ class _CameraAppState extends State<CameraApp> {
       return Container();
     }
     return MaterialApp(
-        home: Stack(
-      alignment: Alignment.center,
-      children: [
-        CameraPreview(controller),
-        Image.asset('assets/images/overlay.png'),
-      ],
-    ));
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Camera Overlay Test')),
+        body: !_showCameraPreview
+            ? ((_picture != null)
+                ? Image.file(File(_picture!.path))
+                : Container())
+            : Stack(
+                alignment: Alignment.center,
+                children: [
+                  CameraPreview(controller),
+                  Image.asset(
+                    'assets/images/overlay.png',
+                    color: Colors.white,
+                  ),
+                  Transform.translate(
+                    offset: const Offset(0.0, 230.0),
+                    child: TextButton(
+                        onPressed: () async {
+                          _picture = await controller.takePicture();
+                          controller.resumePreview();
+                          _showCameraPreview = false;
+                          setState(() {});
+                        },
+                        child: Transform.scale(
+                            scale: 3,
+                            child: const Icon(
+                              Icons.camera,
+                              color: Colors.white,
+                            ))),
+                  ),
+                ],
+              ),
+        floatingActionButton: ElevatedButton(
+          onPressed: () {
+            _showCameraPreview = true;
+            if (!controller.value.isInitialized) {
+              controller.initialize();
+            }
+            setState(() {});
+          },
+          child: const Icon(Icons.camera_alt),
+        ),
+      ),
+    );
   }
 }
