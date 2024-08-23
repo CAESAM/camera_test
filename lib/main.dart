@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,7 @@ class _CameraAppState extends State<CameraApp> {
   late CameraController controller;
   bool _showCameraPreview = false;
   XFile? _picture;
+  final List<XFile> _pictures = List.empty(growable: true);
 
   @override
   void initState() {
@@ -64,9 +66,24 @@ class _CameraAppState extends State<CameraApp> {
       home: Scaffold(
         appBar: AppBar(title: const Text('Camera Overlay Test')),
         body: !_showCameraPreview
-            ? ((_picture != null)
-                ? Image.file(File(_picture!.path))
-                : Container())
+            ? (_pictures.isEmpty)
+                ? Container()
+                : GridView.builder(
+                    itemCount: _pictures.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3),
+                    itemBuilder: (context, index) {
+                      //if (index + 1 == _pictures.length) {
+                      return Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child:
+                            Image.file(File(_pictures.elementAt(index).path)),
+                      );
+                      //}
+
+                      //return const GridTile(child: Text('No photo here'));
+                    })
             : Stack(
                 alignment: Alignment.center,
                 children: [
@@ -78,11 +95,14 @@ class _CameraAppState extends State<CameraApp> {
                   Transform.translate(
                     offset: const Offset(0.0, 230.0),
                     child: TextButton(
-                        onPressed: () async {
-                          _picture = await controller.takePicture();
-                          controller.resumePreview();
-                          _showCameraPreview = false;
-                          setState(() {});
+                        onPressed: () {
+                          controller.takePicture().then((photo) {
+                            _picture = photo;
+                            _pictures.add(_picture!);
+                            controller.resumePreview();
+                            _showCameraPreview = false;
+                            setState(() {});
+                          });
                         },
                         child: Transform.scale(
                             scale: 3,
