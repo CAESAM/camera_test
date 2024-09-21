@@ -88,7 +88,7 @@ class _CameraAppState extends State<CameraApp> {
                 children: [
                   CameraPreview(controller),
                   Image.asset(
-                    'assets/images/overlay.png',
+                    'assets/images/overlay2.png',
                     color: Colors.white,
                   ),
                   Transform.translate(
